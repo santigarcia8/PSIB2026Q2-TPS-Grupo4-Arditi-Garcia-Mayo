@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.signal import welch, butter, filtfilt, iirnotch
+from scipy.signal import welch, butter, filtfilt, iirnotch, find_peaks
 import mne, wfdb
 
 
@@ -17,15 +17,15 @@ ref = anotaciones.sample
 
 
 t=np.arange(0,len(señal[:,1]))/fs #defino e tiempo que duran los registros
-# for i in range(señal.shape[1]):
-#     plt.figure()
-#     plt.plot(t, señal[:,i], color="darkgreen", linewidth=0.5)
-#     plt.suptitle(f"ECG del canal {canales[i]}")
-#     plt.grid(color="lightgray")
-#     plt.xlabel("Tiempo [s]")
-#     plt.ylabel("Amplitud [mV]")
-#     plt.tight_layout()
-#     plt.show()
+for i in range(señal.shape[1]):
+    plt.figure()
+    plt.plot(t, señal[:,i], color="darkgreen", linewidth=0.5)
+    plt.suptitle(f"ECG del canal {canales[i]}")
+    plt.grid(color="lightgray")
+    plt.xlabel("Tiempo [s]")
+    plt.ylabel("Amplitud [mV]")
+    plt.tight_layout()
+    plt.show()
 
 #Primero que nada detecto un pico ENORME después de 165 s por lo que ahí hay un artefacto predominante.
 #Decido sacarlo antes de filtrar para evitar que se disperse por el resto del ECG ya que es muy puntual
@@ -36,28 +36,28 @@ for i in range(señal.shape[1]):
     inicio, fin = punto_max-20, punto_max+20
     señal_sin_artefacto[inicio:fin+1, i] = np.linspace(señal[inicio-1,i], señal[fin+1,i], fin-inicio+3)[1:-1]
 
-# for i in range(señal_sin_artefacto.shape[1]):
-#     plt.figure()
-#     plt.plot(t, señal_sin_artefacto[:,i], color="magenta", linewidth=0.5)
-#     plt.suptitle(f"ECG sin artefacto del canal {canales[i]}")
-#     plt.grid(color="lightgray")
-#     plt.xlabel("Tiempo [s]")
-#     plt.ylabel("Amplitud [mV]")
-#     plt.tight_layout()
-#     plt.show()
+for i in range(señal_sin_artefacto.shape[1]):
+    plt.figure()
+    plt.plot(t, señal_sin_artefacto[:,i], color="magenta", linewidth=0.5)
+    plt.suptitle(f"ECG sin artefacto del canal {canales[i]}")
+    plt.grid(color="lightgray")
+    plt.xlabel("Tiempo [s]")
+    plt.ylabel("Amplitud [mV]")
+    plt.tight_layout()
+    plt.show()
 
 #sospecho ruido de baja frecuencia, hago PSD para confirmar. No debería haber ruido de línea porque fue
 #eliminado en el sistema de detección según el dataset. Igual confirmo
 
-# for i in range(señal.shape[1]):
-#     freq, p = welch(señal_sin_artefacto[:,i], fs=fs, nperseg=2048, noverlap=2048//2)
-#     plt.figure()
-#     plt.semilogy(freq,p,color="purple", linewidth=0.5)
-#     plt.xlabel("Frecuencia [Hz]")
-#     plt.ylabel("PSD")
-#     plt.xlim(0,200)
-#     plt.title(f"PSD con Welch del canal {canales[i]}")
-#     plt.show()
+for i in range(señal.shape[1]):
+    freq, p = welch(señal_sin_artefacto[:,i], fs=fs, nperseg=2048, noverlap=2048//2)
+    plt.figure()
+    plt.semilogy(freq,p,color="purple", linewidth=0.5)
+    plt.xlabel("Frecuencia [Hz]")
+    plt.ylabel("PSD")
+    plt.xlim(0,200)
+    plt.title(f"PSD con Welch del canal {canales[i]}")
+    plt.show()
 
 #Se observa un pico predominante en bajas frecuencias de deriva
 #Se observa frecuencias por encima de los 100 Hz así que aplico pasabandas en ese rango
@@ -71,104 +71,89 @@ d, c = iirnotch(50, Q=30, fs=fs) #corto en 50, aplico Q=30 para hacer muy fina l
 señal_filtrada[:,3]=filtfilt(d,c, señal_filtrada[:,3])
 
 
-# for i in range(señal.shape[1]):
-#     plt.figure()
-#     plt.plot(t, señal_filtrada[:,i], color="darkgreen", linewidth=0.5)
-#     plt.suptitle(f"ECG del canal {canales[i]}")
-#     plt.grid(color="lightgray")
-#     plt.xlabel("Tiempo [s]")
-#     plt.ylabel("Amplitud [mV]")
-#     plt.show()
+for i in range(señal.shape[1]):
+    plt.figure()
+    plt.plot(t, señal_filtrada[:,i], color="darkgreen", linewidth=0.5)
+    plt.suptitle(f"ECG del canal {canales[i]}")
+    plt.grid(color="lightgray")
+    plt.xlabel("Tiempo [s]")
+    plt.ylabel("Amplitud [mV]")
+    plt.show()
 
 #ploteo comparativamente
-# for i in range(señal.shape[1]):
-#     plt.figure()
-#     plt.plot(t, señal_filtrada[:,i], color="darkgreen", linewidth=0.5, label="Filtrada")
-#     plt.plot(t, señal[:,i], color="orange", linewidth=0.5, label="Original", linestyle="--")
-#     plt.suptitle(f"ECG del canal {canales[i]}")
-#     plt.grid(color="lightgray")
-#     plt.xlabel("Tiempo [s]")
-#     plt.ylabel("Amplitud [mV]")
-#     plt.legend()
-#     plt.show()
+for i in range(señal.shape[1]):
+    plt.figure()
+    plt.plot(t, señal_filtrada[:,i], color="darkgreen", linewidth=0.5, label="Filtrada")
+    plt.plot(t, señal[:,i], color="orange", linewidth=0.5, label="Original", linestyle="--")
+    plt.suptitle(f"ECG del canal {canales[i]}")
+    plt.grid(color="lightgray")
+    plt.xlabel("Tiempo [s]")
+    plt.ylabel("Amplitud [mV]")
+    plt.legend()
+    plt.show()
 
-# for i in range(señal.shape[1]):
-#     freq, p = welch(señal_filtrada[:,i], fs=fs, nperseg=2048, noverlap=2048//2)
-#     plt.figure()
-#     plt.semilogy(freq,p,color="purple", linewidth=0.5)
-#     plt.xlabel("Frecuencia [Hz]")
-#     plt.ylabel("PSD")
-#     plt.xlim(0,200)
-#     plt.title(f"PSD con Welch del canal {canales[i]} filtrado")
-#     plt.show()
+for i in range(señal.shape[1]):
+    freq, p = welch(señal_filtrada[:,i], fs=fs, nperseg=2048, noverlap=2048//2)
+    plt.figure()
+    plt.semilogy(freq,p,color="purple", linewidth=0.5)
+    plt.xlabel("Frecuencia [Hz]")
+    plt.ylabel("PSD")
+    plt.xlim(0,200)
+    plt.title(f"PSD con Welch del canal {canales[i]} filtrado")
+    plt.show()
     
 #FILTRO ADAPTATIVO - ANC
-#Primero defino qué canal del ECG voy a usar como referencia. Para eso tengo que usar el que menos información contenga del FECG
-#En base a Direct_1 voy a buscar los QRS del bebé, luego ver qué ECG tiene más de esa info, y ahí ver cuál uso como referencia del ANC
+#Propongemos un filtro adaptativo que tome como referencia la señal del ECG materno y la elimine de los canales 
 
-#Pan Tompkins
-f, e = butter(4, [12,42], btype="bandpass", fs = fs)
-fetal_filtrado_banda = filtfilt(f, e, señal_filtrada[:,0])
-
-#Derivativo
-fetal_filtrado_derivativo = np.convolve(fetal_filtrado_banda, np.array([1, 2, 0, -2, -1]) / 8 * fs, mode="same") #uso el original para no desfasar
-
-#Elevo al cuadrado
-fetal_cuadrado = fetal_filtrado_derivativo**2
-
-#Media móvil
-M =  31  # 30 ms; impar para que la ventana quede centrada
-fetal_integrado = np.convolve(fetal_cuadrado, np.ones(M) / M, mode="same")
-altura_tipica = np.percentile(fetal_integrado, 99.5)
-fraccion = 0.35          # parámetro a barrer
-threshold = fraccion * altura_tipica
-picos = []
-i = 0
-while i < len(fetal_integrado):
-    if fetal_integrado[i] > threshold:
-        inicio = i
-        while i < len(fetal_integrado) and fetal_integrado[i] > threshold:
-            i += 1                      # avanza hasta que la señal baja del umbral
-        picos.append(inicio + np.argmax(fetal_integrado[inicio:i]))   # el máximo de ese grupo
-    else:
-        i += 1
-#Una vez que detecté QRS, voy a guardar los R
-w = int(0.03 * fs)    # 30 ms
-R = []
-for p in picos:
-    a = max(p - w, 0)
-    b = min(p + w + 1, len(fetal_filtrado_banda))
-    R.append(a + np.argmax(np.abs(fetal_filtrado_banda[a:b])))
-R = np.array(R)
-
-ventana = int(0.15 * fs)                         # ±150 ms alrededor de cada R
-R_limpios = R[(R > 5*fs) & (R < 40*fs)]          # tramo limpio, sin artefactos largos
-t_v = np.arange(-ventana, ventana + 1) / fs * 1000   # eje en ms
-
-# plt.figure(figsize=(12, 6))
-# for c in range(1, 5):                            # canales 1..4 = abdomen
-#     latidos = np.array([señal_filtrada[r - ventana : r + ventana + 1, c] for r in R_limpios])
-#     promedio = latidos.mean(axis=0)
-#     print(canales[c], "amplitud pico a pico del promedio:", np.ptp(promedio))
-#     plt.plot(t_v, promedio, label=canales[c])
-# plt.xlabel("Tiempo respecto del R [ms]")
-# plt.legend()
-# plt.show()
-
-def nlms(d, ref, L, mu, eps=1e-6):
-    w = np.zeros(L)
-    salida = np.zeros(len(d))
-    for n in range(L, len(d)):
-        xv = ref[n-L+1:n+1][::-1]
-        y = w @ xv
-        salida[n] = d[n] - y
-        w += mu * salida[n] * xv / (eps + xv @ xv)
+def nlms_multicanal(d, refs, L, mu, eps=1e-6): #d es la señal a limpiar, refs las referencia, L muestras pasadas, mu el paso 
+    N, R = refs.shape
+    w = np.zeros(L * R) #vector donde se guardan los pesos
+    salida = np.zeros(N) #vector donde guardo la señal limpia
+    for n in range(L, N): #voy recorriendo toda la señal
+        xv = refs[n-L+1:n+1][::-1].ravel()   # toma las muestras de todos los canales, las ordena de más reciente a más vieja, y las pone en un vector juntas
+        y = w @ xv                           # estimación del ECG materno con los pesos
+        salida[n] = d[n] - y                 # lo que queda
+        w += mu * salida[n] * xv / (eps + xv @ xv) #actualización de pesos, normalizada para que no dispare
     return salida
 
-fetal_anc = nlms(señal_filtrada[:, 4], señal_filtrada[:, 1], L=256, mu=0.003)
+#Como necesito una referencia solo del latido matenro y no tengo, me la construyo
 
-t = np.arange(len(fetal_anc)) / fs
-plt.figure(figsize=(14, 6))
-plt.subplot(2, 1, 1); plt.plot(t, señal_filtrada[:, 4]); plt.title("Abdomen_4 antes"); plt.xlim(10, 15)
-plt.subplot(2, 1, 2); plt.plot(t, fetal_anc);            plt.title("Abdomen_4 después del filtro"); plt.xlim(10, 15)
-plt.tight_layout(); plt.show()
+def referencia_materna(x, picos, fs, pre=0.2, post=0.4): #defino de dónde tomar la referencia (x), puntos donde están los latidos, y cuánto antes voy a recortar y cuanto después
+    a, b = int(pre*fs), int(post*fs) #defino la cantidad de muestras que responden a esos pre y post
+    picos = picos[(picos > a) & (picos < len(x) - b)] #no tengo en cuenta picos iniciales
+    latidos = np.array([x[p-a:p+b] for p in picos]) #toma los fragmentos un poco antes y un poco después de los picos en la señal
+    plantilla = latidos.mean(axis=0) #promeido para realzar el de la madre y atenuar fetal y ruido
+    ref = np.zeros(len(x)) #donde voy a guardar los valores de la referencia final
+    for p, lat in zip(picos, latidos):
+        esc = (lat @ plantilla) / (plantilla @ plantilla)   # amplitud de este latido
+        ref[p-a:p+b] = esc * plantilla
+    return ref #devuelve la referencia
+
+#Primero busco los latidos de a madre en abomen 1 que es de las que mejor se ve
+
+x1 = señal_filtrada[:, 1]
+umbral = 0.5 * np.percentile(np.abs(x1), 99.5) #hago que la señal sea toda positiva y busco un valor the threshold que solo el 0,5% supere y lo pongo a la mitad
+picos, _ = find_peaks(np.abs(x1), height=umbral, distance=int(0.5 * fs)) #uso la función que cuenta los picos respecto al umbral, intentando que salgan con una distancia de 0,5fs para evitar tomar dos latidos juntos
+
+#Armo la referencia de la madre con los picos
+
+refs = np.column_stack([referencia_materna(señal_filtrada[:, c], picos, fs) for c in (1, 2, 3, 4)]) #tengo las referenias de cada canal por columna puestas
+
+#Uso el filtro adaptativio con las referencias encontradas 
+#uso mu 0.01 porque da pasos pequeños para que no haya problemas de convergencia, mu = 0.02 ya daba una señal muy atenuada y mala
+# filtro los 4 canales para luego promediarlos y bajar varianza pero realzar fetal
+
+salidas = np.column_stack([
+    nlms_multicanal(señal_filtrada[:, c], refs, L=64, mu=0.01) for c in (1, 2, 3, 4)
+])
+
+promedio = salidas.mean(axis=1) #hago el promedio por el eje entre canales distintos
+
+plt.figure(figsize=(16,4))
+plt.subplot(2,1,1)
+plt.plot(t, señal_filtrada[:,0], color = "navy", linewidth = 0.5)
+plt.grid(color="lightgray")
+plt.subplot(2,1,2)
+plt.plot(t, promedio, color = "magenta", linewidth=0.5)
+plt.grid(color="lightgray")
+plt.show()
