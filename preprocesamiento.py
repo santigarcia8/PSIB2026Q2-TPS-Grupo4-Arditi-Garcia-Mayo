@@ -157,3 +157,7 @@ plt.subplot(2,1,2)
 plt.plot(t, promedio, color = "magenta", linewidth=0.5)
 plt.grid(color="lightgray")
 plt.show()
+
+# Guardamos la señal fECG limpia, la frecuencia, el vector de tiempo Y los picos maternos
+np.savez("fecg_limpio.npz", senal_fetal=promedio, picos_maternos=picos, fs=fs, t=t)
+print("Archivo 'fecg_limpio.npz' guardado correctamente con picos_maternos.")
