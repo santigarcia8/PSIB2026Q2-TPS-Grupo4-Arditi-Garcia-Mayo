@@ -110,6 +110,6 @@ def detectar_qrs(señal, fs, refractario=0.3, ventana=0.15, devolver_etapas=Fals
 
     if devolver_etapas: #para graficar en el informe o revisar si algo falla
         etapas = {"pasabanda": señal_pb, "derivada": señal_d, "cuadrado": señal_c,
-                  "integrada": señal_i, "candidatos": candidatos, "umbral": umbral, "qrs_integrada": qrs}
+                "integrada": señal_i, "candidatos": candidatos, "umbral": umbral, "qrs_integrada": qrs}
         return picos_r, etapas
     return picos_r
