@@ -4,6 +4,15 @@ from scipy.signal import welch, butter, filtfilt, iirnotch
 import mne, wfdb
 from pathlib import Path
 
+def guardar_figura(carpeta, nombre_archivo, fig=None):
+    #guarda la figura (la actual si no se pasa ninguna) en carpeta/nombre_archivo, creando la carpeta si no existe,
+    #y la cierra para que no se abra ninguna ventana ni se acumulen figuras en memoria
+    fig = fig if fig is not None else plt.gcf()
+    carpeta = Path(carpeta)
+    carpeta.mkdir(parents=True, exist_ok=True)
+    fig.savefig(carpeta / nombre_archivo, dpi=300)
+    plt.close(fig)
+
 def eleccion_archivos():
     path = None
     raiz = Path(__file__).resolve().parent.parent
@@ -59,7 +68,7 @@ def preprocesamiento(señal, canales, fs, nombre, raiz):
         plt.xlabel("Tiempo [s]")
         plt.ylabel("Amplitud [mV]")
         plt.tight_layout()
-        # plt.savefig(raiz / "Resultados" / nombre / "ECG original" / f"ecg_original_{canales[i]}.png", dpi=300)
+        guardar_figura(raiz / "Resultados" / nombre / "ECG original", f"ecg_original_{canales[i]}.png")
 
 
     #sospecho ruido de baja frecuencia, hago PSD para confirmar. No debería haber ruido de línea porque fue
@@ -73,7 +82,7 @@ def preprocesamiento(señal, canales, fs, nombre, raiz):
         plt.ylabel("PSD")
         plt.xlim(0,200)
         plt.title(f"PSD con Welch del canal {canales[i]}")
-        # plt.savefig(raiz / "Resultados" / nombre / "Periodograma crudo" / f"periodograma_crudo_{canales[i]}.png", dpi=300)
+        guardar_figura(raiz / "Resultados" / nombre / "Periodograma crudo", f"periodograma_crudo_{canales[i]}.png")
         
     #El ruido de baja y alta frecuencia está presente en todas así que armo el butterworth y filtro para todos
 
@@ -96,7 +105,7 @@ def preprocesamiento(señal, canales, fs, nombre, raiz):
         plt.grid(color="lightgray")
         plt.xlabel("Tiempo [s]")
         plt.ylabel("Amplitud [mV]")
-        # plt.savefig(raiz / "Resultados" / nombre / "ECG filtrado" / f"ecg_filtrado_{canales[i]}.png", dpi=300)
+        guardar_figura(raiz / "Resultados" / nombre / "ECG filtrado", f"ecg_filtrado_{canales[i]}.png")
 
     for i in range(señal.shape[1]):
         freq, p = welch(señal_filtrada[:,i], fs=fs, nperseg=2048, noverlap=2048//2)
@@ -106,6 +115,6 @@ def preprocesamiento(señal, canales, fs, nombre, raiz):
         plt.ylabel("PSD")
         plt.xlim(0,200)
         plt.title(f"PSD con Welch del canal {canales[i]} filtrado")
-        # plt.savefig(raiz / "Resultados" / nombre / "Periodograma filtrado" / f"periodograma_filtrado_{canales[i]}.png", dpi=300)
+        guardar_figura(raiz / "Resultados" / nombre / "Periodograma filtrado", f"periodograma_filtrado_{canales[i]}.png")
     
     return señal_filtrada
