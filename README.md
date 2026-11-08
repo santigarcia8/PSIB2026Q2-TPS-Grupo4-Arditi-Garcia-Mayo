@@ -12,7 +12,7 @@ Pipeline completo:
 
 1. **Preprocesamiento** de los canales (filtro pasabanda y notch de 50 Hz según registro).
 2. **Detección del QRS materno** con Pan-Tompkins (se usa *solo* para la madre).
-3. **Cancelación del ECG materno** (plantilla por SVD + filtro adaptativo RLS), que deja una estimación del ECG fetal.
+3. **Cancelación del ECG materno** (referencia del ECG materno estimada por SVD + filtro adaptativo RLS, cuyo error es la estimación del ECG fetal).
 4. **Detección de los latidos fetales** con `qrs_detect` (traducción a Python de `qrs_detect.m`, J. Behar).
 5. **Serie RR y HRV fetal** (dominio temporal, periodograma de Lomb-Scargle, Poincaré).
 6. **Validación** contra las anotaciones del electrodo directo: calidad de la detección, exactitud de los RR y diferencia entre la HRV estimada y la de referencia.
