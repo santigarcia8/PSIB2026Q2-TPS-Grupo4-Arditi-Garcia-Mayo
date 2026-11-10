@@ -42,10 +42,10 @@ def main():
     x = filtfilt(b_l, a_l, filtfilt(b_h, a_h, x))
 
     #Latidos fetales anotados del dataset (electrodo en la cabeza del feto): son la REFERENCIA
-    #las anotaciones (rXX.edf.qrs) tienen que estar en Archivos/, junto al .edf, así la ruta es relativa al repo
+    #las anotaciones (rXX.edf.qrs) tienen que estar en data/raw/, junto al .edf, así la ruta es relativa al repo
     ruta_ann = Path(path + ".qrs")
     if not ruta_ann.exists():
-        raise FileNotFoundError(f"Falta {ruta_ann.name} en {ruta_ann.parent}. Copialo desde la carpeta del dataset a Archivos/.")
+        raise FileNotFoundError(f"Falta {ruta_ann.name} en {ruta_ann.parent}. Copialo desde la carpeta del dataset a data/raw/ (ver README).")
     ann = wfdb.rdann(path, "qrs")
     r_fetales = ann.sample
     print("latidos fetales anotados:", len(r_fetales), " largo de x:", len(x))

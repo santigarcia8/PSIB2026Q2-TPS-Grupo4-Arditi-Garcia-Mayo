@@ -16,7 +16,7 @@ def guardar_figura(carpeta, nombre_archivo, fig=None):
 def eleccion_archivos():
     path = None
     raiz = Path(__file__).resolve().parent.parent
-    carpeta = raiz/ "Archivos"
+    carpeta = raiz / "data" / "raw"
 
     registros_disponibles = sorted(carpeta.glob("*.edf"))
     print("Registros disponibles:")

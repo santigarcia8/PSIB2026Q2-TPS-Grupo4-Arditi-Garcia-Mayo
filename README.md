@@ -20,7 +20,7 @@ Pipeline completo:
 ## Base de datos
 
 [Abdominal and Direct Fetal ECG Database v1.0.0](https://physionet.org/content/adfecgdb/1.0.0/) (PhysioNet).
-Registros usados: `r01`, `r04`, `r07`, `r08` y `r10`. Cada uno dura 5 minutos y está muestreado a 1 kHz (`fs = 1000 Hz`).
+Registros usados: `r01`, `r04`, `r07` y `r10`. Cada uno dura 5 minutos y está muestreado a 1 kHz (`fs = 1000 Hz`).
 
 Artículo de referencia del dataset: *Determination of fetal heart rate from abdominal signals: evaluation of beat-to-beat accuracy in relation to the direct fetal electrocardiogram* — DOI [10.1515/bmt-2011-0130](https://doi.org/10.1515/bmt-2011-0130).
 
@@ -37,6 +37,7 @@ Requiere **Python 3.10 o superior**.
 
 ```bash
 # 1) clonar el repositorio y entrar a la carpeta
+git clone https://github.com/santigarcia8/PSIB2026Q2-TPS-Grupo4-Arditi-Garcia-Mayo.git
 cd PSIB2026Q2-TPS-Grupo4-Arditi-Garcia-Mayo
 
 # 2) crear y activar un entorno virtual
@@ -52,18 +53,26 @@ Dependencias (ver `requirements.txt`): `numpy`, `scipy`, `matplotlib`, `mne` (le
 
 ## Preparar los datos
 
-Copiar a la carpeta `Archivos/` los `.edf` **y** sus `.edf.qrs` (los nombres deben quedar exactamente así, por ejemplo `r01.edf` y `r01.edf.qrs`):
+El dataset **no está incluido en el repositorio**: cada uno lo descarga y lo copia a la carpeta `data/raw/`, que está en el `.gitignore` (así los datos nunca se suben).
+
+1. Descargar el dataset desde https://physionet.org/content/adfecgdb/1.0.0/ (botón **Download the ZIP file**) y descomprimirlo.
+2. En la raíz del repositorio (al lado de `main.py`) crear la carpeta `data/raw/`.
+3. Copiar ahí, de los registros **r01, r04, r07 y r10**, el `.edf` **y** su `.edf.qrs`, sin cambiarles el nombre. El resto de los archivos del ZIP no se usa.
 
 ```
-Archivos/
-├── r01.edf
-├── r01.edf.qrs
-├── r04.edf
-├── r04.edf.qrs
-└── ...
+data/
+└── raw/
+    ├── r01.edf
+    ├── r01.edf.qrs
+    ├── r04.edf
+    ├── r04.edf.qrs
+    ├── r07.edf
+    ├── r07.edf.qrs
+    ├── r10.edf
+    └── r10.edf.qrs
 ```
 
-Si falta el archivo de anotaciones, el programa se detiene y avisa cuál es.
+Si falta el archivo de anotaciones de un registro, el programa se detiene y avisa cuál es.
 
 ## Ejecución
 
@@ -71,7 +80,7 @@ Si falta el archivo de anotaciones, el programa se detiene y avisa cuál es.
 python main.py
 ```
 
-1. El programa lista los registros disponibles en `Archivos/`.
+1. El programa lista los registros disponibles en `data/raw/`.
 2. Se elige el registro ingresando su número (con `0` se sale).
 3. Se ejecuta todo el pipeline y se imprimen en consola las métricas de detección, de exactitud de RR y la tabla de HRV (referencia vs. detectado).
 
@@ -84,7 +93,7 @@ python main.py
 ├── main.py
 ├── requirements.txt
 ├── README.md
-├── Archivos/                 # datos de entrada (.edf y .edf.qrs)
+├── data/raw/                 # dataset (.edf y .edf.qrs), no se sube
 ├── Módulos/
 │   ├── preprocesamiento.py
 │   ├── pantompkins.py
@@ -158,4 +167,5 @@ El `.csv` tiene las columnas `seccion, metrica, referencia, detectado, error, er
 - J. Pan y W. J. Tompkins, "A real-time QRS detection algorithm", *IEEE Trans. Biomed. Eng.*, 32(3):230–236, 1985.
 - J. Behar, `qrs_detect.m` (detector de QRS traducido a Python en `Módulos/qrs_detect.py`).
 - L. Castro et al., "Systematic Review of Intrapartum Fetal Heart Rate Spectral Analysis and an Application in the Detection of Fetal Acidemia", *Frontiers in Pediatrics*, 9:661400, 2021 (bandas LF/MF/HF de HRV fetal).
-- [COMPLETAR] Artículo en el que se basa la cancelación del ECG materno (SVD + filtro RLS).
+- N. Zhang et al., "A novel technique for fetal ECG extraction using single-channel abdominal recording", *Sensors*, 17(3):457, 2017. DOI [10.3390/s17030457](https://doi.org/10.3390/s17030457) (cancelación del ECG materno: SVD + suavizado + filtro adaptativo).
+- P. P. Kanjilal, S. Palit y G. Saha, "Fetal ECG extraction from single-channel maternal ECG using singular value decomposition", *IEEE Trans. Biomed. Eng.*, 44(1):51–59, 1997. DOI [10.1109/10.553712](https://doi.org/10.1109/10.553712).
