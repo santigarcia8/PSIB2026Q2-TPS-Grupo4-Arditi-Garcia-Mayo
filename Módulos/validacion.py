@@ -48,7 +48,7 @@ def metricas_deteccion(det, ref, fs, tol_s=0.05):
 #EXACTITUD LATIDO A LATIDO DE LOS RR: ¿son exactos los RR?
 def comparar_con_referencia(det, ref, fs, tol=0.05):
     #repite el emparejamiento guardando que deteccion corresponde a cada latido y con eso compara solo los intervalos RR cuyos dos extremos fueron detectados
-    #devuelve las series de RR, el error y sus metricas (sesgo, desvio, RMSE y correlacion)
+    #devuelve las series de RR, el error y sus metricas (sesgo, desvio y RMSE)
     det = np.sort(np.asarray(det)); ref = np.sort(np.asarray(ref))
     tol = tol * fs
     usados = np.zeros(len(det), dtype=bool)
@@ -76,7 +76,6 @@ def comparar_con_referencia(det, ref, fs, tol=0.05):
         "Error medio [ms]": err.mean(),
         "Desvío del error [ms]": err.std(ddof=1),
         "RMSE [ms]": np.sqrt(np.mean(err**2)),
-        "Correlación RR": np.corrcoef(rr_ref, rr_det)[0, 1],
     }
 
 
@@ -102,8 +101,8 @@ def imprimir_comparacion(filas, titulo):
 
 
 #GRÁFICOS DE LA VALIDACIÓN
-def graficar_validacion(extra_det, extra_ref, comp, nombre, titulo="", guardar=None):
-    fig, ax = plt.subplots(1, 3, figsize=(17, 4.8))
+def graficar_validacion(extra_det, extra_ref, nombre, titulo="", guardar=None):
+    fig, ax = plt.subplots(1, 2, figsize=(12, 4.8))
     fig.suptitle(f"Validación contra FECG directo - {nombre} {titulo}")
 
     #Tacograma superpuesto
@@ -125,20 +124,6 @@ def graficar_validacion(extra_det, extra_ref, comp, nombre, titulo="", guardar=N
     a.plot(extra_det["f"], extra_det["p"], color="darkgreen", label="Detectado")
     a.set_xlabel("Frecuencia [Hz]"); a.set_ylabel("PSD [ms²/Hz]"); a.set_title("Periodograma de Lomb-Scargle")
     a.grid(color="lightgray"); a.legend()
-
-    #Bland-Altman de los RR
-    #X: RR medio de ambos metodos
-    #Y: rr_det - rr_ref
-    a = ax[2]
-    m = (comp["rr_ref"] + comp["rr_det"]) / 2
-    e = comp["err"]
-    a.plot(m, e, ".", ms=3, color="purple")
-    mu, sd = e.mean(), e.std(ddof=1)
-    for yv, ls in [(mu, "-"), (mu + 1.96 * sd, "--"), (mu - 1.96 * sd, "--")]:
-        a.axhline(yv, color="gray", linestyle=ls, linewidth=0.8)
-    a.set_xlabel("RR medio [ms]"); a.set_ylabel("RR det - RR ref [ms]")
-    a.set_title(f"Bland-Altman (sesgo {mu:.2f} ms, ±1.96 SD {1.96*sd:.1f} ms)")
-    a.grid(color="lightgray")
 
     plt.tight_layout()
     if guardar is not None:
@@ -171,7 +156,7 @@ def validar(r_det, r_ref, fs, nombre, titulo="", carpeta=None):
     if carpeta is not None:
         carpeta = Path(carpeta)
         slug = (titulo or "deteccion").lower().replace(" ", "_")
-        graficar_validacion(ex_det, ex_ref, comp, nombre, titulo, carpeta / f"validacion_{nombre}_{slug}.png")
+        graficar_validacion(ex_det, ex_ref, nombre, titulo, carpeta / f"validacion_{nombre}_{slug}.png")
         ruta_csv = carpeta / f"metricas_{nombre}_{slug}.csv"
         with open(ruta_csv, "w", newline="", encoding="utf-8") as f:
             w = csv.writer(f)

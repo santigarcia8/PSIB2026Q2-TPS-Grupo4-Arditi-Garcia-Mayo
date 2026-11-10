@@ -55,7 +55,7 @@ def limpiar_rr(rr, rr_min=0.30, rr_max=0.65, ventana=11, tol=0.10):
     return valido
 
 #DOMINIO TEMPORAL
-def metricas_temporales(t, rr, valido):
+def metricas_temporales(rr, valido):
     #primero pasa a milisegundos y se queda con los RR validos
     #fhr es la FCF instantanea de cada latido
     rr_ms = rr * 1000
@@ -67,18 +67,6 @@ def metricas_temporales(t, rr, valido):
     #Si hubiera un RR descartado en el medio, la diferencia enre el anterior y el siguiente mediria dos latidos, no uno e inflaria la variabilidad
     par = valido[1:] & valido[:-1]
     d = np.diff(rr_ms)[par]
-
-    #LTV fetal
-    #etiqueta cada RR con el minuto al que pertenece, seleccion los validos de ese minuto, descarta los minutos con menos de 10 RR
-    #pasa a FCF y toma el rango maximo menos el minimo en lpm
-    #despues promedia los rangos de todos los minutos
-    minuto = np.floor(t / 60).astype(int)
-    rangos = []
-    for m in np.unique(minuto):
-        sel = valido & (minuto == m)
-        if sel.sum() >= 10: #descarto minutos casi vacíos
-            f = 60 / rr[sel]
-            rangos.append(f.max() - f.min())
 
     return { 
         #calidad de la deteccion
@@ -94,12 +82,6 @@ def metricas_temporales(t, rr, valido):
 
         #variabilidad latido a latido, eleva al cuadrado para darle mas peso a los saltos grandes
         "RMSSD [ms]": np.sqrt(np.mean(d**2)),
-
-        #tambien es variabilidad latido a latido pero con valor absoluto
-        "STV [ms]": np.mean(np.abs(d)),
-
-        #variabilidad de minutos
-        "LTV [lpm]": np.mean(rangos) if rangos else np.nan,
     }
 
 
@@ -138,7 +120,7 @@ def potencias_banda(f, p):
 def hrv_completo(picos, fs):
     t, rr = serie_rr(picos, fs)
     valido = limpiar_rr(rr)
-    res = metricas_temporales(t, rr, valido)
+    res = metricas_temporales(rr, valido)
     f, p = psd_lomb(t, rr, valido)
     res.update(potencias_banda(f, p))
     extra = {"t": t, "rr": rr, "valido": valido, "f": f, "p": p}
