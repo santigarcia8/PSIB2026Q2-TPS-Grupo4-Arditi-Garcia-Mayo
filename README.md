@@ -14,7 +14,7 @@ Pipeline completo:
 2. **Detección del QRS materno** con Pan-Tompkins (se usa *solo* para la madre).
 3. **Cancelación del ECG materno** (referencia del ECG materno estimada por SVD + filtro adaptativo RLS, cuyo error es la estimación del ECG fetal).
 4. **Detección de los latidos fetales** con `qrs_detect` (traducción a Python de `qrs_detect.m`, J. Behar).
-5. **Serie RR y HRV fetal** (dominio temporal, periodograma de Lomb-Scargle, Poincaré).
+5. **Serie RR y HRV fetal** (dominio temporal y periodograma de Lomb-Scargle).
 6. **Validación** contra las anotaciones del electrodo directo: calidad de la detección, exactitud de los RR y diferencia entre la HRV estimada y la de referencia.
 
 ## Base de datos
@@ -102,7 +102,7 @@ python main.py
 | `Módulos/pantompkins.py` | Detector de QRS de Pan-Tompkins (pasabanda, derivada, cuadrado, integración, umbrales adaptativos con searchback y regla de onda T, ajuste del R). Se usa **solo** para el QRS materno. |
 | `Módulos/filtro_adaptativo.py` | Cancelación del ECG materno: `referencia_materna` (matriz de latidos maternos, estimación por SVD y suavizado entre QRS) y `filtro_rls` (filtro adaptativo RLS cuya salida estima el ECG fetal). |
 | `Módulos/qrs_detect.py` | Detector de QRS fetal (traducción a Python de `qrs_detect.m`, J. Behar). Se usa para detectar los latidos fetales. |
-| `Módulos/hrv_fetal.py` | A partir de los latidos detectados: serie RR, limpieza de RR, métricas temporales, periodograma de Lomb-Scargle, Poincaré y gráficos de HRV. |
+| `Módulos/hrv_fetal.py` | A partir de los latidos detectados: serie RR, limpieza de RR, métricas temporales, periodograma de Lomb-Scargle y gráficos de HRV. |
 | `Módulos/validacion.py` | Comparación contra el electrodo directo: Se/PPV/F1, exactitud de los RR (error, RMSE, correlación, Bland-Altman) y HRV detectada vs. referencia. Guarda figura y `.csv`. |
 
 ## Detalle del procesamiento
@@ -124,7 +124,6 @@ python main.py
 | Calidad | N de RR válidos, % descartados |
 | Temporal | FCF media, RR medio, SDNN, RMSSD, STV (promedio de \|ΔRR\|), LTV (rango de FCF por minuto) |
 | Frecuencial | Potencia en LF (0.04–0.15 Hz), MF (0.15–0.5 Hz) y HF (0.5–1 Hz), porcentajes y cociente LF/(MF+HF), con periodograma de Lomb-Scargle (0.02–1 Hz) |
-| Poincaré | SD1, SD2, SD1/SD2 |
 
 **Validación** — un latido detectado es correcto si está a menos de 50 ms de uno de referencia. Los RR se comparan solo en los intervalos cuyos dos latidos fueron detectados.
 
@@ -137,9 +136,9 @@ Resultados/<registro>/
 ├── ECG filtrado/
 ├── Periodograma filtrado/
 ├── QRS maternos/             # R maternos detectados (primeros 10 s)
-├── HRV fetal/                # tacograma, Poincaré y periodograma de lo detectado
+├── HRV fetal/                # tacograma y periodograma de lo detectado
 └── Validación/
-    ├── validacion_<registro>_qrs_detect.png   # tacograma, Poincaré, PSD y Bland-Altman vs. referencia
+    ├── validacion_<registro>_qrs_detect.png   # tacograma, PSD y Bland-Altman vs. referencia
     └── metricas_<registro>_qrs_detect.csv     # todas las métricas (detección, RR y HRV)
 ```
 
@@ -150,7 +149,7 @@ El `.csv` tiene las columnas `seccion, metrica, referencia, detectado, error, er
 - Los registros duran 5 minutos y la serie de FCF no es estacionaria (por ejemplo, con aceleraciones), por lo que las potencias espectrales deben interpretarse con cuidado.
 - Los valores absolutos de potencia espectral están escalados a la varianza de la serie; los porcentajes y el cociente son más comparables.
 - STV y LTV son versiones simplificadas (por latido y por minuto), no las definiciones clínicas de cardiotocografía.
-- La HRV de variabilidad rápida (RMSSD, STV, SD1, HF) es sensible al error de ubicación del R, por lo que en el ECG abdominal tiende a sobreestimarse respecto de la referencia directa.
+- La HRV de variabilidad rápida (RMSSD, STV, HF) es sensible al error de ubicación del R, por lo que en el ECG abdominal tiende a sobreestimarse respecto de la referencia directa.
 
 ## Referencias
 

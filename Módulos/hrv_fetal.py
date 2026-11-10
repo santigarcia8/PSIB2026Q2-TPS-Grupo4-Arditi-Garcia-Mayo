@@ -134,21 +134,6 @@ def potencias_banda(f, p):
     return out
 
 
-#POINCARÉ
-def poincare(rr, valido):
-    #cada latido es un punto
-    #si todos los RR fueran iguales, todos los puntos caerian sobre la recta y=x
-    #se rotan los  ejes 45 y se obtienen dos direcciones perpendiculares a la identidad
-    #SD1 es el desvio en la direccion perpendicular: mide cuanto cambia un RR respecto del siguiente (variabilidad latido a latido)
-    #SD2 es el desvio a lo largo de la identidad: mide como deriva el nivel basal (variabilidad lenta)
-    par = valido[1:] & valido[:-1]
-    x = rr[:-1][par] * 1000
-    y = rr[1:][par] * 1000
-    sd1 = np.std((y - x) / np.sqrt(2), ddof=1)
-    sd2 = np.std((y + x) / np.sqrt(2), ddof=1)
-    return x, y, sd1, sd2
-
-
 #HRV COMPLETA DE UNA SERIE DE LATIDOS + GRÁFICOS
 def hrv_completo(picos, fs):
     t, rr = serie_rr(picos, fs)
@@ -156,11 +141,7 @@ def hrv_completo(picos, fs):
     res = metricas_temporales(t, rr, valido)
     f, p = psd_lomb(t, rr, valido)
     res.update(potencias_banda(f, p))
-    x, y, sd1, sd2 = poincare(rr, valido)
-    res["SD1 [ms]"] = sd1
-    res["SD2 [ms]"] = sd2
-    res["SD1/SD2"] = sd1 / sd2
-    extra = {"t": t, "rr": rr, "valido": valido, "f": f, "p": p, "poincare": (x, y)}
+    extra = {"t": t, "rr": rr, "valido": valido, "f": f, "p": p}
     return res, extra
 
 def imprimir_tabla(res, titulo="HRV fetal"):
@@ -169,7 +150,7 @@ def imprimir_tabla(res, titulo="HRV fetal"):
         print(f"{k:<24}{v:>12.3f}")
 
 def graficar_hrv(extra, nombre, titulo="", guardar=None):
-    fig, ax = plt.subplots(1, 3, figsize=(17, 4.8))
+    fig, ax = plt.subplots(1, 2, figsize=(12, 4.8))
     fig.suptitle(f"HRV fetal - {nombre} {titulo}")
     v = extra["valido"]
 
@@ -183,17 +164,8 @@ def graficar_hrv(extra, nombre, titulo="", guardar=None):
     a.set_xlabel("Tiempo [s]"); a.set_ylabel("FCF [lpm]"); a.set_title("Tacograma fetal")
     a.grid(color="lightgray"); a.legend()
 
-    #Poincaré
-    a = ax[1]
-    x, y = extra["poincare"]
-    a.plot(x, y, ".", ms=3, color="darkgreen")
-    lim = [min(x.min(), y.min()), max(x.max(), y.max())]
-    a.plot(lim, lim, "--", color="gray", linewidth=0.8)
-    a.set_xlabel("RR(n) [ms]"); a.set_ylabel("RR(n+1) [ms]"); a.set_title("Poincaré")
-    a.set_aspect("equal", adjustable="datalim"); a.grid(color="lightgray")
-
     #PSD con Lomb-Scargle
-    a = ax[2]
+    a = ax[1]
     colores = {"LF": "tab:blue", "MF": "tab:orange", "HF": "tab:red"}
     for k, (lo, hi) in BANDAS.items():
         a.axvspan(lo, hi, color=colores[k], alpha=0.12, label=k)

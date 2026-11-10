@@ -103,32 +103,21 @@ def imprimir_comparacion(filas, titulo):
 
 #GRÁFICOS DE LA VALIDACIÓN
 def graficar_validacion(extra_det, extra_ref, comp, nombre, titulo="", guardar=None):
-    fig, ax = plt.subplots(2, 2, figsize=(13, 8))
+    fig, ax = plt.subplots(1, 3, figsize=(17, 4.8))
     fig.suptitle(f"Validación contra FECG directo - {nombre} {titulo}")
 
     #Tacograma superpuesto
     #superpone 60/rr (FCF) de la referencia (negro) y del detectado (verde), solo rr VALIDOS
-    a = ax[0, 0]
+    a = ax[0]
     for ex, col, lab in [(extra_ref, "black", "Referencia (FECG directo)"), (extra_det, "darkgreen", "Detectado (abdominal)")]:
         v = ex["valido"]
         a.plot(ex["t"][v], 60 / ex["rr"][v], ".", ms=3, color=col, label=lab)
     a.set_xlabel("Tiempo [s]"); a.set_ylabel("FCF [lpm]"); a.set_title("Tacograma fetal")
     a.grid(color="lightgray"); a.legend()
 
-    #Poincaré superpuesto
-    #Superpone ambas nubes, traza la identidad y fija ejes iguales
-    a = ax[0, 1]
-    xr, yr = extra_ref["poincare"]; xd, yd = extra_det["poincare"]
-    a.plot(xd, yd, ".", ms=3, color="darkgreen", label="Detectado")
-    a.plot(xr, yr, ".", ms=3, color="black", label="Referencia")
-    lim = [min(xr.min(), xd.min(), yr.min(), yd.min()), max(xr.max(), xd.max(), yr.max(), yd.max())]
-    a.plot(lim, lim, "--", color="gray", linewidth=0.8)
-    a.set_xlabel("RR(n) [ms]"); a.set_ylabel("RR(n+1) [ms]"); a.set_title("Poincaré")
-    a.set_aspect("equal", adjustable="datalim"); a.grid(color="lightgray"); a.legend()
-
     #PSD con Lomb-Scargle superpuesto
     #superpone ambos espectros sobre las bandas
-    a = ax[1, 0]
+    a = ax[1]
     colores = {"LF": "tab:blue", "MF": "tab:orange", "HF": "tab:red"}
     for k, (lo, hi) in BANDAS.items():
         a.axvspan(lo, hi, color=colores[k], alpha=0.12, label=k)
@@ -140,7 +129,7 @@ def graficar_validacion(extra_det, extra_ref, comp, nombre, titulo="", guardar=N
     #Bland-Altman de los RR
     #X: RR medio de ambos metodos
     #Y: rr_det - rr_ref
-    a = ax[1, 1]
+    a = ax[2]
     m = (comp["rr_ref"] + comp["rr_det"]) / 2
     e = comp["err"]
     a.plot(m, e, ".", ms=3, color="purple")
@@ -196,5 +185,3 @@ def validar(r_det, r_ref, fs, nombre, titulo="", carpeta=None):
         print(f"\nMétricas y figura guardadas en: {carpeta}")
 
     return {"deteccion": det, "rr": escalares, "hrv_det": res_det, "hrv_ref": res_ref, "tabla": filas}
-
-
